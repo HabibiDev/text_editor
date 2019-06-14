@@ -1,4 +1,5 @@
 import os
+import argparse
 from format_collections import *
 
 
@@ -13,10 +14,13 @@ class TextEditor:
 						'.csv': FileCSV,
 						'.xls': FileXLS
 						}
-		self.actions = {
-						'r': self.formats[self.file_format](self.file).read_text,
-						'w': self.formats[self.file_format](self.file).write_text
-						}
+		try:
+			self.actions = {
+							'r': self.formats[self.file_format](self.file).read_text,
+							'w': self.formats[self.file_format](self.file).write_text
+							}
+		except KeyError:
+			raise KeyError('You must input full path of your file')
 
 	def check_action(self):
 		if str(self.action) not in self.actions.keys():
@@ -31,8 +35,6 @@ class TextEditor:
 	def check_input(self):
 		if not self.action:
 			raise AttributeError('You must choose, what do you want to do: r - read or w - write')
-		if not self.file:
-			raise AttributeError('You must input full path of your file')
 
 	def edit_or_read(self):
 		self.check_input()
@@ -42,6 +44,9 @@ class TextEditor:
 
 
 if __name__ == '__main__':
-	action = input('please input what you want to do(r - read, w - write): ')
-	file = input('please write full path to your file(it\'s must be .txt or .csv): ')
-	TextEditor(action, file).edit_or_read()
+	parser = argparse.ArgumentParser()
+	parser.add_argument("r", help='r - read first five line in file', type=str, default='r')
+	parser.add_argument("w", help='w - write new line at the end', type=str, default='w')
+	parser.add_argument("f", help='full path to your file', type=str)
+	args = parser.parse_args()
+	TextEditor(args.r, args.f).edit_or_read()

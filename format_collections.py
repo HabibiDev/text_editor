@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
-from xlrd import open_workbook
+from xlrd import open_workbook, biffh
+from xlwt import Workbook
 from xlutils.copy import copy
 
 
@@ -8,9 +9,13 @@ class FileObject(ABC):
     def __init__(self, file):
         self.file = file
 
-    @abstractmethod
     def check_file_data(self):
-        pass
+        with open(str(self.file), 'r') as read_file:
+            data = read_file.readlines()
+            if len(data) >= 5:
+                return data
+            else:
+                raise Exception('In your file less then 5 line')
 
     @abstractmethod
     def read_text(self):
@@ -22,14 +27,6 @@ class FileObject(ABC):
 
 
 class FileTXT(FileObject):
-
-    def check_file_data(self):
-        with open(str(self.file), 'r') as read_file:
-            data = read_file.readlines()
-            if len(data) >= 5:
-                return data
-            else:
-                raise Exception('In your file less then 5 line')
 
     def read_text(self):
         data = self.check_file_data()
@@ -43,14 +40,6 @@ class FileTXT(FileObject):
 
 
 class FileCSV(FileObject):
-
-    def check_file_data(self):
-        with open(str(self.file), 'r') as read_file:
-            data = read_file.readlines()
-            if len(data) >= 5:
-                return data
-            else:
-                raise Exception('In your file less then 5 line')
 
     def read_text(self):
         data = self.check_file_data()
@@ -79,10 +68,16 @@ class FileXLS(FileObject):
             print(data.row_values(i))
 
     def write_text(self):
-        rb = open_workbook(str(self.file))
-        wb = copy(rb)
-        rs = rb.sheet_by_index(0)
-        ws = wb.get_sheet(0)
-        ws.write(rs.nrows, 0, 'Default Line')
-        wb.save(str(self.file))
+        try:
+            rb = open_workbook(str(self.file))
+            wb = copy(rb)
+            rs = rb.sheet_by_index(0)
+            ws = wb.get_sheet(0)
+            ws.write(rs.nrows, 0, 'Default Line')
+            wb.save(str(self.file))
+        except biffh.XLRDError:
+            rb = Workbook()
+            ws = rb.add_sheet('A Test Sheet')
+            ws.write(0, 0, 'Default Line')
+            rb.save(str(self.file))
         return 'write'
