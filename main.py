@@ -1,41 +1,32 @@
 import os
+from format_collections import *
 
 
 class TextEditor:
 	def __init__(self, input_action, input_file_path):
 		self.action = input_action
 		self.file = input_file_path
+		self.file_format = os.path.splitext(input_file_path)[-1]
 		self.data = None
-		self.actions = ['r', 'w']
-		self.formats = ['txt', 'csv']
-	
+		self.formats = {
+						'.txt': FileTXT,
+						'.csv': FileCSV,
+						'.xls': FileXLS
+						}
+		self.actions = {
+						'r': self.formats[self.file_format](self.file).read_text,
+						'w': self.formats[self.file_format](self.file).write_text
+						}
+
 	def check_action(self):
-		if str(self.action) not in self.actions:
+		if str(self.action) not in self.actions.keys():
 			raise ValueError('wrong input, you must choose "r" or "w"')
 
 	def check_file(self):
-		if str(self.file)[-3:] not in self.formats:
+		if self.file_format not in self.formats.keys():
 			raise ValueError('wrong file, you must input file in formats ".txt" or ".csv"')
 		if not os.path.exists(self.file):
 			raise FileNotFoundError('No such file {} or wrong input filepath'.format(self.file))
-
-	def check_file_data(self):
-		with open(str(self.file), 'r') as read_file:
-			self.data = read_file.readlines()
-			if len(self.data) >= 5:
-				return self.data
-			else:
-				raise Exception('In your file less then 5 line')
-
-	def read_text(self):
-		self.check_file_data()
-		for i in self.data[:5]:
-			print(i, end='')
-
-	def write_text(self):
-		with open(str(self.file), 'a+') as edit_file:
-			edit_file.write('Default line\n')
-		return 'write'
 
 	def check_input(self):
 		if not self.action:
@@ -47,10 +38,7 @@ class TextEditor:
 		self.check_input()
 		self.check_action()
 		self.check_file()
-		if self.action == 'r':
-			return self.read_text()
-		else:
-			return self.write_text()
+		return self.actions[self.action]()
 
 
 if __name__ == '__main__':
